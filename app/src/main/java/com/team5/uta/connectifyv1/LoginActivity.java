@@ -1,5 +1,6 @@
 package com.team5.uta.connectifyv1;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -11,9 +12,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.sql.ResultSet;
+import java.util.Random;
+
 public class LoginActivity extends ActionBarActivity {
 
     public static final String PREFS_NAME = "UserData";
+    public DBConnection db = null;
+    public ResultSet output = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +28,7 @@ public class LoginActivity extends ActionBarActivity {
 
         final Button go = (Button) findViewById(R.id.btn_login);
 
-        SharedPreferences userData = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences userData = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         final String uname = (String)userData.getString("Email", "");
         final String password = (String)userData.getString("Password", "");
 
@@ -62,8 +68,35 @@ public class LoginActivity extends ActionBarActivity {
                 if(email.getText().toString().equalsIgnoreCase(uname) &&
                         pwd.getText().toString().equalsIgnoreCase(password)) {
                     Toast.makeText(getApplicationContext(), "Awesome ! You are IN !", Toast.LENGTH_LONG).show();
+
+                    Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
+                    startActivity(mapActivity);
                 } else {
-                    Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
+
+                    try {
+
+                        db = new DBConnection();
+                        db.execute("select * from connectifydb.user where user_email='"+ email.getText().toString() +"'", true);
+
+                        output = (ResultSet)db.getResult();
+                        while (output.next()) {
+                            String email = output.getString("user_email");
+                            if(email.equalsIgnoreCase(uname)) {
+                                Toast.makeText(getApplicationContext(), "Awesome ! You are IN !", Toast.LENGTH_LONG).show();
+
+                                Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
+                                startActivity(mapActivity);
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
+                            }
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
+                    }
+
+
                 }
 
             }
