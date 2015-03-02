@@ -1,5 +1,6 @@
 package com.team5.uta.connectifyv1;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,11 +13,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class RegisterActivity extends ActionBarActivity {
+
+    public static final String PREFS_NAME = "UserData";
+    public DBConnection db = null;
+    public Object output = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +36,7 @@ public class RegisterActivity extends ActionBarActivity {
         final EditText email= (EditText) findViewById(R.id.email);
         final Button sign_up=(Button) findViewById(R.id.signup_button);
         final int duration=Toast.LENGTH_SHORT;
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_APPEND);
 
         sign_up.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,11 +63,21 @@ public class RegisterActivity extends ActionBarActivity {
                             editor.putString("Password",password.getText().toString());
                             editor.putString("Email",email.getText().toString());
                             editor.commit();
-                            //Toast ex= Toast.makeText(getApplicationContext(),prefs.getString("FirstName",null),duration);
-                            //ex.show();
 
-                            Intent addInterestsActivity = new Intent(RegisterActivity.this, AddInterestActivity.class);
-                            startActivity(addInterestsActivity);
+                            db = new DBConnection();
+                            db.execute("insert into connectifydb.user values("+ new Random().nextInt(10000) +", '"+
+                                    first_name.getText().toString() +"', '"+
+                                    last_name.getText().toString() +"', '" +
+                                    email.getText().toString() +"')", false);
+
+                            //output = (int)db.getResult();
+
+                            //if ((int)output == 1) {
+                                Intent securityQuestionsActivity = new Intent(RegisterActivity.this, SecurityQuestions.class);
+                                startActivity(securityQuestionsActivity);
+                            //} else {
+                                //Toast.makeText(getApplicationContext(),"Unable to Register",duration);
+                            //}
                         }
                         else {
                             Toast.makeText(getApplicationContext(),"Invalid email id.",Toast.LENGTH_SHORT).show();
