@@ -39,6 +39,10 @@
             android:name=".MapActivity"
             android:label="Connectify" >
         </activity>
+        <activity
+            android:name=".SecurityQuestions"
+            android:label="Connectify" >
+        </activity>
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -46,7 +50,6 @@
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_maps_key" />
-
     </application>
 
 </manifest>
