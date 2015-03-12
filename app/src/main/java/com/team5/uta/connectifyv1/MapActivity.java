@@ -1,32 +1,45 @@
 package com.team5.uta.connectifyv1;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapActivity extends ActionBarActivity implements LocationListener {
 
-    GoogleMap googleMap = null;
-    LatLng latLng;
-    LocationManager locMgr;
-    String provider;
-    Location location;
+    private GoogleMap googleMap = null;
+    private LatLng latLng;
+    private LocationManager locMgr;
+    private String provider;
+    private Location location;
+    private Geofence geofence;
+    private Criteria criteria;
+    private Marker user;
+    private Circle circle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#f5793f")));
         setUpMapIfNeeded();
     }
 
@@ -53,19 +66,23 @@ public class MapActivity extends ActionBarActivity implements LocationListener {
     private void setUpMapIfNeeded() {
         if (googleMap == null){
             googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();//invoke of map fragment by id from main xml file
-            googleMap.getUiSettings().setScrollGesturesEnabled(false);
-            googleMap.getUiSettings().setAllGesturesEnabled(false);
+            //googleMap.getUiSettings().setScrollGesturesEnabled(false);
+            //googleMap.getUiSettings().setAllGesturesEnabled(false);
             if (googleMap != null) {
                 googleMap.setMyLocationEnabled(true);//Makes the users current location visible by displaying a blue dot.
+                criteria = new Criteria();
 
                 locMgr =(LocationManager)getSystemService(LOCATION_SERVICE);//use of location services by firstly defining location manager.
-                provider= locMgr.getBestProvider(new Criteria(), true);
 
+                provider= locMgr.getBestProvider(criteria, true);
+                Log.i("Provider","Provider: "+provider);
+                locMgr.requestLocationUpdates(provider,100, 0, this);
                 if(provider==null){
                     onProviderDisabled(provider);
                 }
-                location= locMgr.getLastKnownLocation(provider);
 
+                location= locMgr.getLastKnownLocation(provider);
+                Log.i("GPS","Location: "+location);
                 if (location!=null){
                     onLocationChanged(location);
                 }
@@ -76,9 +93,38 @@ public class MapActivity extends ActionBarActivity implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
+        removeGeoFence();
+        Toast.makeText(MapActivity.this,"Location changed: "+location, Toast.LENGTH_SHORT);
         latLng = new LatLng(location.getLatitude(), location.getLongitude());
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(19));
+        addGeoFence(30f, latLng);
+    }
+
+    public void addGeoFence(float radius, LatLng latLng) {
+        geofence = new Geofence.Builder().setRequestId("1")
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setCircularRegion(location.getLatitude(), location.getLongitude(), radius)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE).build();
+
+        user = googleMap.addMarker(new MarkerOptions().position(latLng));
+
+        CircleOptions circleOptions = new CircleOptions()
+                .center(latLng)   //set center
+                .radius(radius)   //set radius in meters
+                .fillColor(0x40ff0000)
+                .strokeColor(Color.TRANSPARENT)
+                .strokeWidth(2);
+
+        circle = googleMap.addCircle(circleOptions);
+    }
+
+    public void removeGeoFence(){
+        if(user!=null && circle!=null){
+            //LocationServices.GeofencingApi.removeGeofences()
+            user.remove();
+            circle.remove();
+        }
     }
 
     @Override
@@ -95,7 +141,8 @@ public class MapActivity extends ActionBarActivity implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-        // TODO Auto-generated method stub
+        Toast.makeText(MapActivity.this,"Provider disabled", Toast.LENGTH_SHORT);
+        Log.i("msg","Provider disabled");
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.team5.uta.connectifyv1;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -71,6 +73,8 @@ public class AddInterestActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_interest);
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#f5793f")));
+
         final InterestHolder[] interestPool = new InterestHolder[interestText.length];
         for(int i=0;i<interestText.length;i++) {
             InterestHolder interestHolder = new InterestHolder(interestText[i], interestImage[i]);

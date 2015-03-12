@@ -53,8 +53,8 @@ public class SecurityQuestions extends Activity implements AdapterView.OnItemSel
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent mapActivity = new Intent(SecurityQuestions.this, MapActivity.class);
-                startActivity(mapActivity);
+                Intent interestActivity = new Intent(SecurityQuestions.this, AddInterestActivity.class);
+                startActivity(interestActivity);
             }
         });
 
