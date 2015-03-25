@@ -14,8 +14,8 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.team5.uta.connectifyv1.adapter.Interest;
 import com.team5.uta.connectifyv1.adapter.InterestDataAdapter;
-import com.team5.uta.connectifyv1.adapter.InterestHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +24,7 @@ import java.util.Arrays;
 public class AddInterestActivity extends ActionBarActivity {
 
     GridView grid;
-    ArrayList<String> selectedInterests =  new ArrayList<String>();
+    ArrayList<Interest> selectedInterests =  new ArrayList<Interest>();
     String[] interestText = {
             "Anime",
             "Big Data",
@@ -75,10 +75,10 @@ public class AddInterestActivity extends ActionBarActivity {
         setContentView(R.layout.activity_add_interest);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#f5793f")));
 
-        final InterestHolder[] interestPool = new InterestHolder[interestText.length];
+        final Interest[] interestPool = new Interest[interestText.length];
         for(int i=0;i<interestText.length;i++) {
-            InterestHolder interestHolder = new InterestHolder(interestText[i], interestImage[i]);
-            interestPool[i] = interestHolder;
+            Interest interest = new Interest(interestText[i], interestImage[i]);
+            interestPool[i] = interest;
         }
 
         final InterestDataAdapter adapter = new InterestDataAdapter(AddInterestActivity.this, interestPool);
@@ -91,11 +91,11 @@ public class AddInterestActivity extends ActionBarActivity {
                                     int position, long id) {
                 view.setBackgroundResource(R.drawable.grid_color_selector);
                 if(grid.isItemChecked(position)) {
-                    selectedInterests.add(interestText[+position]);
+                    selectedInterests.add(interestPool[+position]);
                     //Toast.makeText(AddInterestActivity.this, interestText[+position]+ " : SELECTED", Toast.LENGTH_SHORT).show();
                     Log.i("myTag",Arrays.toString(selectedInterests.toArray()));
                 } else {
-                    selectedInterests.remove(interestText[+position]);
+                    selectedInterests.remove(interestPool[+position]);
                     //Toast.makeText(AddInterestActivity.this, interestText[+position]+ " : UNSELECTED", Toast.LENGTH_SHORT).show();
                     Log.i("myTag",Arrays.toString(selectedInterests.toArray()));
                 }
@@ -108,7 +108,9 @@ public class AddInterestActivity extends ActionBarActivity {
             public void onClick(View v) {
                 if (selectedInterests.size() > 0) {
                     Intent home = new Intent(AddInterestActivity.this, MapActivity.class);
-                    home.putStringArrayListExtra("selected_interests", selectedInterests);
+                    User user = (User)getIntent().getSerializableExtra("user");
+                    user.setInterests(selectedInterests);
+                    home.putExtra("user", user);
                     startActivity(home);
                 } else {
                     Toast.makeText(AddInterestActivity.this, "Please select at least one", Toast.LENGTH_SHORT).show();

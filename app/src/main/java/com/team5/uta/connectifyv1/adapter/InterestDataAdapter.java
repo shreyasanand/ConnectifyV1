@@ -16,9 +16,9 @@ import com.team5.uta.connectifyv1.R;
 public class InterestDataAdapter extends BaseAdapter {
 
     private Context mContext;
-    private final InterestHolder[] interestPool;
+    private final Interest[] interestPool;
 
-    public InterestDataAdapter(Context c, InterestHolder[] interestPool) {
+    public InterestDataAdapter(Context c, Interest[] interestPool) {
         mContext = c;
         this.interestPool = interestPool;
     }

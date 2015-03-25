@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -67,6 +66,13 @@ public class RegisterActivity extends ActionBarActivity {
                             editor.putString("Email",email.getText().toString());
                             editor.commit();
 
+                            String fname = first_name.getText().toString();
+                            String lname = last_name.getText().toString();
+                            String pwd = password.getText().toString();
+                            String uemail = email.getText().toString();
+
+                            User user = new User(fname, lname, pwd, uemail, null, null);
+
                             db = new DBConnection();
                             db.execute("insert into connectifydb.user values("+ new Random().nextInt(10000) +", '"+
                                     first_name.getText().toString() +"', '"+
@@ -77,6 +83,7 @@ public class RegisterActivity extends ActionBarActivity {
 
                             //if ((int)output == 1) {
                                 Intent securityQuestionsActivity = new Intent(RegisterActivity.this, SecurityQuestions.class);
+                                securityQuestionsActivity.putExtra("user", user);
                                 startActivity(securityQuestionsActivity);
                             //} else {
                                 //Toast.makeText(getApplicationContext(),"Unable to Register",duration);

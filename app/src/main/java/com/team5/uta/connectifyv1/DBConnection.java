@@ -1,13 +1,9 @@
 package com.team5.uta.connectifyv1;
 
-import android.content.Context;
 import android.os.AsyncTask;
-import android.widget.Toast;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -56,11 +52,9 @@ class DBConnection extends AsyncTask {
             st = conn.createStatement();
             if (params[1] == true) {
                 rs = st.executeQuery((String) params[0]);
-
             } else {
                 isInsert = true;
                 updated = st.executeUpdate((String) params[0]);
-
             }
             if (isInsert == false) {
                 if (rs != null) {
