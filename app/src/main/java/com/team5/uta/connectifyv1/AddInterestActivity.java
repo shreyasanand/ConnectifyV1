@@ -107,11 +107,11 @@ public class AddInterestActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 if (selectedInterests.size() > 0) {
-                    Intent home = new Intent(AddInterestActivity.this, MapActivity.class);
+                    Intent map = new Intent(AddInterestActivity.this, MapActivity.class);
                     User user = (User)getIntent().getSerializableExtra("user");
                     user.setInterests(selectedInterests);
-                    home.putExtra("user", user);
-                    startActivity(home);
+                    map.putExtra("user", user);
+                    startActivity(map);
                 } else {
                     Toast.makeText(AddInterestActivity.this, "Please select at least one", Toast.LENGTH_SHORT).show();
                 }

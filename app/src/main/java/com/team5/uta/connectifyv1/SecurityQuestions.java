@@ -58,7 +58,6 @@ public class SecurityQuestions extends Activity implements AdapterView.OnItemSel
                 startActivity(interestActivity);
             }
         });
-
         next.setFocusable(true);
     }
 
