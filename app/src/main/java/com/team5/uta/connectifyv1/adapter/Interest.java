@@ -3,7 +3,9 @@ package com.team5.uta.connectifyv1.adapter;
 import java.io.Serializable;
 
 /**
- * Created by shreyas on 2/20/2015.
+ * Class: Interest
+ *
+ * Contains the Interest details.
  */
 public class Interest implements Serializable{
 

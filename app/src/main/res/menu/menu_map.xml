@@ -1,0 +1,25 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.team5.uta.connectifyv1.MapActivity">
+
+    <item
+        android:id="@+id/home"
+        android:title="@string/home"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/profile"
+        android:title="@string/profile"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/interests"
+        android:title="@string/interests"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        />
+
+</menu>

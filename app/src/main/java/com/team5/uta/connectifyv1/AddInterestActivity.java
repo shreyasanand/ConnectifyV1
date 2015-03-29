@@ -109,6 +109,15 @@ public class AddInterestActivity extends ActionBarActivity {
                 if (selectedInterests.size() > 0) {
                     Intent map = new Intent(AddInterestActivity.this, MapActivity.class);
                     User user = (User)getIntent().getSerializableExtra("user");
+//                    if(user==null) {
+//                        Toast.makeText(getApplicationContext(),
+//                                "User is NULL",
+//                                Toast.LENGTH_SHORT).show();
+//                    } else {
+//                        Toast.makeText(getApplicationContext(),
+//                                "Welcome : "+user.getFname(),
+//                                Toast.LENGTH_SHORT).show();
+//                    }
                     user.setInterests(selectedInterests);
                     map.putExtra("user", user);
                     startActivity(map);
@@ -134,10 +143,6 @@ public class AddInterestActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
 
         return super.onOptionsItemSelected(item);
     }

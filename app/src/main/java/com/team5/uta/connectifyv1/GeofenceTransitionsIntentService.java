@@ -3,6 +3,7 @@ package com.team5.uta.connectifyv1;
 /**
  * Created by shreyas on 3/12/2015.
  */
+
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -58,7 +59,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
 //            String errorMessage = GeofenceErrorMessages.getErrorString(this,
 //                    geofencingEvent.getErrorCode());
 //            Log.e(TAG, errorMessage);
-            return;
+//            return;
         }
 
         // Get the transition type.
@@ -80,6 +81,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
             // Send notification and log the transition details.
             sendNotification(geofenceTransitionDetails);
+
             Log.i(TAG, geofenceTransitionDetails);
         } else {
             // Log the error.

@@ -1,12 +1,11 @@
 package com.team5.uta.connectifyv1;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,14 +13,22 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.sql.ResultSet;
-import java.util.Random;
+import java.util.ArrayList;
 
 public class LoginActivity extends ActionBarActivity {
 
     public static final String PREFS_NAME = "UserData";
-    public DBConnection db = null;
     public ResultSet output = null;
+    private HttpWrapper httpWrapper;
+    private HttpPost httppost;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,11 +36,12 @@ public class LoginActivity extends ActionBarActivity {
         setContentView(R.layout.activity_login);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#f5793f")));
 
+        httpWrapper = new HttpWrapper();
         final Button go = (Button) findViewById(R.id.btn_login);
 
-        SharedPreferences userData = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        final String uname = (String)userData.getString("Email", "");
-        final String password = (String)userData.getString("Password", "");
+//        SharedPreferences userData = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+//        final String uname = (String)userData.getString("Email", "");
+//        final String password = (String)userData.getString("Password", "");
 
         final EditText email = (EditText) findViewById(R.id.txt_login_email);
         email.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -62,44 +70,28 @@ public class LoginActivity extends ActionBarActivity {
         go.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                if(uname.isEmpty() ||
-                        password.isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "No stored username or password", Toast.LENGTH_LONG).show();
+                if(email == null || pwd == null) {
+                    Toast.makeText(getApplicationContext(), "Please enter email id and password", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                if(email.getText().toString().equalsIgnoreCase(uname) &&
-                        pwd.getText().toString().equalsIgnoreCase(password)) {
-                    Toast.makeText(getApplicationContext(), "Awesome ! You are IN !", Toast.LENGTH_LONG).show();
+                // declare parameters that are passed to PHP script
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
 
-                    Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
-                    startActivity(mapActivity);
-                } else {
+                // define the parameter
+                postParameters.add(new BasicNameValuePair("username",email.getText().toString()));
+                postParameters.add(new BasicNameValuePair("password",pwd.getText().toString()));
 
-                    try {
+                httpWrapper.setPostParameters(postParameters);
 
-                        db = new DBConnection();
-                        db.execute("select * from connectifydb.user where user_email='"+ email.getText().toString() +"'", true);
-
-                        output = (ResultSet)db.getResult();
-                        while (output.next()) {
-                            String email = output.getString("user_email");
-                            if(email.equalsIgnoreCase(uname)) {
-                                Toast.makeText(getApplicationContext(), "Awesome ! You are IN !", Toast.LENGTH_LONG).show();
-
-                                Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
-                                startActivity(mapActivity);
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
-                            }
-                        }
-
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
-                    }
-
-
+                //http post
+                try{
+                    httppost = new HttpPost("http://omega.uta.edu/~sxa1001/login.php");
+                    httpWrapper.setLoginActivity(LoginActivity.this);
+                    httpWrapper.execute(httppost);
+                }
+                catch(Exception e){
+                    Log.e("register_activity", "Error in http connection " + e.toString());
                 }
 
             }
@@ -132,11 +124,31 @@ public class LoginActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void loginResult(String result) {
+        if(result.contains("Success")) {
+            try {
+                JSONObject jObject  = new JSONObject(result);
+                String userid = jObject.getString("userid");
+                String fname = jObject.getString("user_Fname");
+                String lname = jObject.getString("user_Lname");
+                String email = jObject.getString("user_email");
+                user = new User(userid,fname,lname,null,email,null,null);
+                Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
+                mapActivity.putExtra("user", user);
+                startActivity(mapActivity);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(),"Login failed",Toast.LENGTH_SHORT).show();
+        }
     }
 }

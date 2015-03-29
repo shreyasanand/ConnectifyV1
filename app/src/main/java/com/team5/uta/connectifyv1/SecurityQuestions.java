@@ -1,8 +1,10 @@
 package com.team5.uta.connectifyv1;
 
-import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,7 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
-public class SecurityQuestions extends Activity implements AdapterView.OnItemSelectedListener {
+public class SecurityQuestions extends ActionBarActivity implements AdapterView.OnItemSelectedListener {
 
     private Spinner spinner01;
     private Spinner spinner02;
@@ -25,7 +27,7 @@ public class SecurityQuestions extends Activity implements AdapterView.OnItemSel
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_security_questions);
-
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#f5793f")));
         spinner01 = (Spinner)findViewById(R.id.spinner5);
         spinner02 = (Spinner)findViewById(R.id.spinner6);
         spinner03 = (Spinner)findViewById(R.id.spinner7);
@@ -54,6 +56,15 @@ public class SecurityQuestions extends Activity implements AdapterView.OnItemSel
             public void onClick(View v) {
                 Intent interestActivity = new Intent(SecurityQuestions.this, AddInterestActivity.class);
                 User user = (User)getIntent().getSerializableExtra("user");
+//                if(user==null) {
+//                    Toast.makeText(getApplicationContext(),
+//                            "User is NULL",
+//                            Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(getApplicationContext(),
+//                            "Welcome : "+user.getFname(),
+//                            Toast.LENGTH_SHORT).show();
+//                }
                 interestActivity.putExtra("user", user);
                 startActivity(interestActivity);
             }
@@ -97,10 +108,10 @@ public class SecurityQuestions extends Activity implements AdapterView.OnItemSel
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }

@@ -11,7 +11,9 @@ import android.widget.TextView;
 import com.team5.uta.connectifyv1.R;
 
 /**
- * Created by shreyas on 2/20/2015.
+ * Class: InterestDataAdapter
+ *
+ * Adapter used to create an interest item.
  */
 public class InterestDataAdapter extends BaseAdapter {
 
@@ -21,21 +23,6 @@ public class InterestDataAdapter extends BaseAdapter {
     public InterestDataAdapter(Context c, Interest[] interestPool) {
         mContext = c;
         this.interestPool = interestPool;
-    }
-
-    @Override
-    public int getCount() {
-        return interestPool.length;
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return null;
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return 0;
     }
 
     @Override
@@ -54,4 +41,20 @@ public class InterestDataAdapter extends BaseAdapter {
         imageView.setImageResource(interestPool[position].getInterestImageId());
         return grid;
     }
+
+    @Override
+    public int getCount() {
+        return interestPool.length;
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return 0;
+    }
+
 }

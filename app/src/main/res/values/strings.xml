@@ -22,10 +22,14 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_example">Example action</string>
     <string name="title_activity_security_questions">SecurityQuestions</string>
-
     <string name="geofence_transition_entered">Entered</string>
     <string name="geofence_transition_exited">Exited</string>
     <string name="unknown_geofence_transition">Unknown Transition</string>
     <string name="not_connected">Not connected</string>
+    <string name="add_geofences">Add geofence</string>
+    <string name="home">Home</string>
+    <string name="profile">Profile</string>
+    <string name="interests">Interests</string>
+    <string name="title_activity_user_profile">UserProfile</string>
 
 </resources>

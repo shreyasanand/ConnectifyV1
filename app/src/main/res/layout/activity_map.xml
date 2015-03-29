@@ -10,4 +10,12 @@
         android:layout_height="match_parent" android:id="@+id/map" tools:context=".MapsActivity"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_weight="0.20" />
+
+    <Button
+        android:id="@+id/add_geofences_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:onClick="addGeofencesButtonHandler"
+        android:text="@string/add_geofences" />
 </FrameLayout>
