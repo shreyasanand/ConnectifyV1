@@ -32,4 +32,27 @@
     <string name="interests">Interests</string>
     <string name="title_activity_user_profile">UserProfile</string>
 
+    <string name="anime">Anime</string>
+    <string name="big_data">Big Data</string>
+    <string name="blogging">Blogging</string>
+    <string name="cats">Cats</string>
+    <string name="country_music">Country</string>
+    <string name="cross_fit">Cross-fit</string>
+    <string name="cricket">Cricket</string>
+    <string name="dogs">Dogs</string>
+    <string name="drones">Drones</string>
+    <string name="got">GOT</string>
+    <string name="hacking">Hacking</string>
+    <string name="motocross">Motocross</string>
+    <string name="paranormal">Paranormal</string>
+    <string name="photography">Photography</string>
+    <string name="seafood">Seafood</string>
+    <string name="tex_mex">Tex-Mex</string>
+    <string name="ui_design">UI Design</string>
+    <string name="wine">Wine</string>
+    <string name="yoga">Yoga</string>
+
+
+
+
 </resources>

@@ -1,10 +1,11 @@
 package com.team5.uta.connectifyv1;
 
 import android.location.Location;
+
 import com.team5.uta.connectifyv1.adapter.Interest;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.UUID;
 
 /**
  * Class: User
@@ -23,7 +24,7 @@ public class User implements Serializable {
 
     public User(String uid, String fname, String lname, String pwd, String email,
                 Location userLoc, ArrayList<Interest> interests) {
-        this.setUid(UUID.randomUUID().toString());
+        this.setUid(uid);
         this.setFname(fname);
         this.setLname(lname);
         this.setPwd(pwd);

@@ -3,8 +3,9 @@ package com.team5.uta.connectifyv1;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,12 +18,17 @@ import android.widget.Toast;
 import com.team5.uta.connectifyv1.adapter.Interest;
 import com.team5.uta.connectifyv1.adapter.InterestDataAdapter;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
 
 public class AddInterestActivity extends ActionBarActivity {
 
+    public String TAG = "add_interest_activity";
     GridView grid;
     ArrayList<Interest> selectedInterests =  new ArrayList<Interest>();
     String[] interestText = {
@@ -69,6 +75,9 @@ public class AddInterestActivity extends ActionBarActivity {
             R.drawable.yoga
     };
 
+    private HttpWrapper httpWrapper;
+    private HttpPost httppost;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +89,7 @@ public class AddInterestActivity extends ActionBarActivity {
             Interest interest = new Interest(interestText[i], interestImage[i]);
             interestPool[i] = interest;
         }
-
+        httpWrapper = new HttpWrapper();
         final InterestDataAdapter adapter = new InterestDataAdapter(AddInterestActivity.this, interestPool);
         grid=(GridView)findViewById(R.id.grid);
         grid.setAdapter(adapter);
@@ -109,18 +118,34 @@ public class AddInterestActivity extends ActionBarActivity {
                 if (selectedInterests.size() > 0) {
                     Intent map = new Intent(AddInterestActivity.this, MapActivity.class);
                     User user = (User)getIntent().getSerializableExtra("user");
-//                    if(user==null) {
-//                        Toast.makeText(getApplicationContext(),
-//                                "User is NULL",
-//                                Toast.LENGTH_SHORT).show();
-//                    } else {
-//                        Toast.makeText(getApplicationContext(),
-//                                "Welcome : "+user.getFname(),
-//                                Toast.LENGTH_SHORT).show();
-//                    }
                     user.setInterests(selectedInterests);
-                    map.putExtra("user", user);
-                    startActivity(map);
+                    ArrayList<String> selectedInterestText = new ArrayList<String>(selectedInterests.size());
+                    for(int i = 0; i<selectedInterests.size();i++) {
+                        selectedInterestText.add(selectedInterests.get(i).getInterestText()+":"+selectedInterests.get(i).getInterestImageId());
+                    }
+                    String selectedInterests_string = TextUtils.join(", ", selectedInterestText);
+                    Log.i(TAG,"Interests: "+selectedInterests_string);
+
+                    // declare parameters that are passed to PHP script
+                    ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+
+                    // define the parameter
+                    postParameters.add(new BasicNameValuePair("user_id",user.getUid()));
+                    postParameters.add(new BasicNameValuePair("selected_interests",selectedInterests_string));
+
+                    httpWrapper.setPostParameters(postParameters);
+
+                    //http post
+                    try{
+                        httppost = new HttpPost("http://omega.uta.edu/~sxa1001/add_interests.php");
+                        httpWrapper.setAddInterestActivity(AddInterestActivity.this);
+                        httpWrapper.execute(httppost);
+                        map.putExtra("user", user);
+                        startActivity(map);
+                    }
+                    catch(Exception e){
+                        Log.e(TAG, "Error in http connection " + e.toString());
+                    }
                 } else {
                     Toast.makeText(AddInterestActivity.this, "Please select at least one", Toast.LENGTH_SHORT).show();
                 }

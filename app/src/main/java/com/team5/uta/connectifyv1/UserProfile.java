@@ -3,8 +3,8 @@ package com.team5.uta.connectifyv1;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.GridView;
@@ -73,6 +73,7 @@ public class UserProfile extends ActionBarActivity {
             case R.id.home:
                 //Toast.makeText(getBaseContext(), "You selected Home", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(this, MapActivity.class);
+                intent.putExtra("user", user);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 break;
@@ -85,4 +86,5 @@ public class UserProfile extends ActionBarActivity {
         }
         return true;
     }
+
 }

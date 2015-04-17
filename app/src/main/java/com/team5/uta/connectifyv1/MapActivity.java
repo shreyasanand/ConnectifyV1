@@ -36,6 +36,12 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.team5.uta.connectifyv1.adapter.Interest;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +67,10 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
     private Button mAddGeofencesButton;
     private boolean mGeofencesAdded;
     private int commonInterestsCount;
-
+    private HttpWrapper httpWrapper1;
+    private HttpWrapper httpWrapper2;
+    private HttpPost httppost1;
+    private HttpPost httppost2;
     private String TAG = "map_activity";
 
 
@@ -69,10 +78,13 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        this.user = (User)getIntent().getSerializableExtra("user");
         mAddGeofencesButton = (Button) findViewById(R.id.add_geofences_button);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#f5793f")));
         mGeofenceList = new ArrayList<Geofence>();
         mGeofencePendingIntent = null;
+        httpWrapper1 = new HttpWrapper();
+        httpWrapper2 = new HttpWrapper();
         setButtonsEnabledState();
         buildGoogleApiClient();
         setUpMapIfNeeded();
@@ -138,7 +150,7 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
 
                 provider= locMgr.getBestProvider(criteria, true);
                 Log.i(TAG,"Provider: "+provider);
-                locMgr.requestLocationUpdates(provider,100, 5, this);
+                locMgr.requestLocationUpdates(provider,100, 20, this);
                 if(provider==null){
                     onProviderDisabled(provider);
                 }
@@ -146,6 +158,25 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
                 location= locMgr.getLastKnownLocation(provider);
                 Log.i(TAG,"Location: "+location);
                 latLng = new LatLng(location.getLatitude(),location.getLongitude());
+
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+
+                // define the parameter
+                postParameters.add(new BasicNameValuePair("user_id",user.getUid()));
+                postParameters.add(new BasicNameValuePair("lat",String.valueOf(location.getLatitude())));
+                postParameters.add(new BasicNameValuePair("lng",String.valueOf(location.getLongitude())));
+
+                httpWrapper2.setPostParameters(postParameters);
+
+                //http post
+                try{
+                    httppost2 = new HttpPost("http://omega.uta.edu/~sxa1001/save_location.php");
+                    httpWrapper2.setMapActivity(this);
+                    httpWrapper2.execute(httppost2);
+                }
+                catch(Exception e){
+                    Log.e(TAG, "Error in http connection " + e.toString());
+                }
             }
         }
     }
@@ -158,6 +189,27 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
             removeGeoFence();
         }
         latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+
+        // define the parameter
+        postParameters.add(new BasicNameValuePair("user_id",user.getUid()));
+        postParameters.add(new BasicNameValuePair("lat",String.valueOf(location.getLatitude())));
+        postParameters.add(new BasicNameValuePair("lng",String.valueOf(location.getLongitude())));
+
+        HttpWrapper httpWrapper = new HttpWrapper();
+        httpWrapper.setPostParameters(postParameters);
+
+        //http post
+        try{
+            HttpPost httppost = new HttpPost("http://omega.uta.edu/~sxa1001/save_location.php");
+            httpWrapper.setMapActivity(this);
+            httpWrapper.execute(httppost);
+        }
+        catch(Exception e){
+            Log.e(TAG, "Error in http connection " + e.toString());
+        }
+
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(19));
         addGeoFence(Constants.GEOFENCE_RADIUS, latLng);
@@ -207,10 +259,6 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
             logSecurityException(securityException);
         }
     }
-
-
-
-
 
     public void addGeofencesButtonHandler(View view) {
         //Toast.makeText(getApplicationContext(), "Inside addGeofence : Adding geofence", Toast.LENGTH_SHORT).show();
@@ -361,9 +409,23 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
 
             case R.id.profile:
                 //Toast.makeText(getBaseContext(), "You selected Profile", Toast.LENGTH_SHORT).show();
-                Intent intent1 = new Intent(this, UserProfile.class);
-                intent1.putExtra("user", user);
-                startActivity(intent1);
+                // declare parameters that are passed to PHP script
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+
+                // define the parameter
+                postParameters.add(new BasicNameValuePair("user_id",user.getUid()));
+
+                httpWrapper1.setPostParameters(postParameters);
+
+                //http post
+                try{
+                    httppost1 = new HttpPost("http://omega.uta.edu/~sxa1001/get_user_interest.php");
+                    httpWrapper1.setMapActivity(this);
+                    httpWrapper1.execute(httppost1);
+                }
+                catch(Exception e){
+                    Log.e(TAG, "Error in http connection " + e.toString());
+                }
                 break;
 
             case R.id.interests:
@@ -424,6 +486,31 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
         } else {
             Log.i(TAG,"User interest match failed");
             return null;
+        }
+    }
+
+    public void openUserProfile(String result) {
+        try {
+            JSONObject jObject  = new JSONObject(result);
+            String interests = jObject.getString("interests");
+            Log.i(TAG,"Final interests: "+interests);
+            ArrayList<Interest> selectedInterest = new ArrayList<Interest>(5);
+
+            String[] rawInterests = interests.split(",");
+            for(int i = 0;i<rawInterests.length;i++) {
+                String[] interestItem = rawInterests[i].split(":");
+                String interestText = interestItem[0];
+                int interestImageId = Integer.valueOf(interestItem[1].trim());
+                Interest interest = new Interest(interestText,interestImageId);
+                selectedInterest.add(interest);
+            }
+
+            user.setInterests(selectedInterest);
+            Intent intent1 = new Intent(this, UserProfile.class);
+            intent1.putExtra("user", user);
+            startActivity(intent1);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 }

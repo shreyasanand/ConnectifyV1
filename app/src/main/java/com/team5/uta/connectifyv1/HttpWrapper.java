@@ -28,23 +28,25 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
     private InputStream inputStream = null;
     private LoginActivity loginActivity;
     private RegisterActivity registerActivity;
+    private AddInterestActivity addInterestActivity;
+    private UserProfile userProfileActivity;
+    private MapActivity mapActivity;
+    private String TAG = "http_wrapper";
 
     @Override
     protected InputStream doInBackground(HttpPost... httppost) {
-        Log.i("http_wrapper","Inside doInBackground");
         InputStream is = null;
         try{
             HttpClient httpclient = new DefaultHttpClient();
-            //HttpPost httpPost = new HttpPost("http://omega.uta.edu/~sxa1001/register.php");
             HttpPost httpPost = httppost[0];
-            Log.i("http_wrapper",httpPost.toString());
+            Log.i(TAG,httpPost.toString());
             httpPost.setEntity(new UrlEncodedFormEntity(postParameters));
             HttpResponse response = httpclient.execute(httpPost);
             HttpEntity entity = response.getEntity();
             is = entity.getContent();
         }
         catch(Exception e){
-            Log.e("http_wrapper", "Error in http connection " + e.toString());
+            Log.e(TAG, "Error in http connection " + e.toString());
         }
         this.inputStream = is;
         return is;
@@ -52,9 +54,10 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
 
     @Override
     protected void onPostExecute(InputStream is) {
-        Log.i("http_wrapper","Inside onPostExecute");
         String result1 = responseToString(is);
         String status;
+
+        Log.i(TAG,result1.toString());
 
         if(result1.contains("Register")) {
             if(result1.contains("Success")) {
@@ -72,6 +75,8 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
                 status = "Fail";
                 this.loginActivity.loginResult(result1);
             }
+        } else if(result1.contains("Get interest")) {
+            this.mapActivity.openUserProfile(result1);
         }
     }
 
@@ -132,4 +137,29 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
     public void setRegisterActivity(RegisterActivity registerActivity) {
         this.registerActivity = registerActivity;
     }
+
+    public AddInterestActivity getAddInterestActivity() {
+        return addInterestActivity;
+    }
+
+    public void setAddInterestActivity(AddInterestActivity addInterestActivity) {
+        this.addInterestActivity = addInterestActivity;
+    }
+
+    public UserProfile getUserProfileActivity() {
+        return userProfileActivity;
+    }
+
+    public void setUserProfileActivity(UserProfile userProfileActivity) {
+        this.userProfileActivity = userProfileActivity;
+    }
+
+    public MapActivity getMapActivity() {
+        return mapActivity;
+    }
+
+    public void setMapActivity(MapActivity mapActivity) {
+        this.mapActivity = mapActivity;
+    }
+
 }
