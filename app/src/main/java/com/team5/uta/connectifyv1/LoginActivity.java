@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.team5.uta.connectifyv1.adapter.Interest;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
@@ -29,6 +31,7 @@ public class LoginActivity extends ActionBarActivity {
     private HttpWrapper httpWrapper;
     private HttpPost httppost;
     private User user;
+    private String TAG = "login_activity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,9 +144,26 @@ public class LoginActivity extends ActionBarActivity {
                 String lname = jObject.getString("user_Lname");
                 String email = jObject.getString("user_email");
                 user = new User(userid,fname,lname,null,email,null,null);
-                Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
-                mapActivity.putExtra("user", user);
-                startActivity(mapActivity);
+
+                // declare parameters that are passed to PHP script
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+
+                // define the parameter
+                postParameters.add(new BasicNameValuePair("user_id",userid));
+
+                HttpWrapper httpWrapper = new HttpWrapper();
+                httpWrapper.setPostParameters(postParameters);
+
+                //http post
+                try{
+                    HttpPost httppost = new HttpPost("http://omega.uta.edu/~sxa1001/get_user_interest.php");
+                    httpWrapper.setLoginActivity(this);
+                    httpWrapper.execute(httppost);
+                }
+                catch(Exception e){
+                    Log.e(TAG, "Error in http connection " + e.toString());
+                }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -151,4 +171,32 @@ public class LoginActivity extends ActionBarActivity {
             Toast.makeText(getApplicationContext(),"Login failed",Toast.LENGTH_SHORT).show();
         }
     }
+
+    public void getInterestFromLoginResult(String result) {
+        try {
+            JSONObject jObject  = new JSONObject(result);
+            String interests = jObject.getString("interests");
+            Log.i(TAG,"Final interests: "+interests);
+            ArrayList<Interest> selectedInterest = new ArrayList<Interest>(5);
+
+            String[] rawInterests = interests.split(",");
+            for(int i = 0;i<rawInterests.length;i++) {
+                String[] interestItem = rawInterests[i].split(":");
+                String interestText = interestItem[0];
+                int interestImageId = Integer.valueOf(interestItem[1].trim());
+                Interest interest = new Interest(interestText,interestImageId);
+                selectedInterest.add(interest);
+            }
+
+            user.setInterests(selectedInterest);
+            Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
+            mapActivity.putExtra("user", user);
+            startActivity(mapActivity);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
 }

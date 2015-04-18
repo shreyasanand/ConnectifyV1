@@ -24,7 +24,7 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
     private BufferedReader reader;
     private StringBuilder sb;
     private String line, result1;
-    private ArrayList<NameValuePair> postParameters;
+    private ArrayList<NameValuePair> postParameters = null;
     private InputStream inputStream = null;
     private LoginActivity loginActivity;
     private RegisterActivity registerActivity;
@@ -39,8 +39,10 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
         try{
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httpPost = httppost[0];
-            Log.i(TAG,httpPost.toString());
-            httpPost.setEntity(new UrlEncodedFormEntity(postParameters));
+            Log.i(TAG,httpPost.getURI().toString());
+            if(postParameters!=null) {
+                httpPost.setEntity(new UrlEncodedFormEntity(postParameters));
+            }
             HttpResponse response = httpclient.execute(httpPost);
             HttpEntity entity = response.getEntity();
             is = entity.getContent();
@@ -76,7 +78,12 @@ public class HttpWrapper extends AsyncTask<HttpPost, Void, InputStream> {
                 this.loginActivity.loginResult(result1);
             }
         } else if(result1.contains("Get interest")) {
-            this.mapActivity.openUserProfile(result1);
+            //this.mapActivity.openUserProfile(result1);
+            this.loginActivity.getInterestFromLoginResult(result1);
+        } else if(result1.contains("Get Location Success")) {
+            this.mapActivity.getUsersLocationResult(result1);
+        } else if(result1.contains("Get other user interest")) {
+            this.mapActivity.getOtherUserInterestResult(result1);
         }
     }
 

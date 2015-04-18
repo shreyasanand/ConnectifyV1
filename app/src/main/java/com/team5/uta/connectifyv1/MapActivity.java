@@ -1,8 +1,15 @@
 package com.team5.uta.connectifyv1;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Criteria;
 import android.location.Location;
@@ -43,7 +50,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MapActivity extends ActionBarActivity implements LocationListener,
                                                         GoogleApiClient.ConnectionCallbacks,
@@ -59,6 +69,7 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
     private Geofence geofence = null;
     private Criteria criteria;
     private Marker userMarker;
+    private Marker otherUserMarker;
     private Circle circle;
     protected GoogleApiClient mGoogleApiClient = null;
     private PendingIntent mGeofencePendingIntent;
@@ -66,12 +77,13 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
     private User user = null;
     private Button mAddGeofencesButton;
     private boolean mGeofencesAdded;
-    private int commonInterestsCount;
+    private int commonInterestsCount = 0;
     private HttpWrapper httpWrapper1;
     private HttpWrapper httpWrapper2;
     private HttpPost httppost1;
     private HttpPost httppost2;
     private String TAG = "map_activity";
+    private LatLng otherUserLocation = null;
 
 
     @Override
@@ -197,14 +209,18 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
         postParameters.add(new BasicNameValuePair("lat",String.valueOf(location.getLatitude())));
         postParameters.add(new BasicNameValuePair("lng",String.valueOf(location.getLongitude())));
 
-        HttpWrapper httpWrapper = new HttpWrapper();
-        httpWrapper.setPostParameters(postParameters);
+        HttpWrapper httpWrapper1 = new HttpWrapper();
+        HttpWrapper httpWrapper2 = new HttpWrapper();
+        httpWrapper1.setPostParameters(postParameters);
 
         //http post
         try{
-            HttpPost httppost = new HttpPost("http://omega.uta.edu/~sxa1001/save_location.php");
-            httpWrapper.setMapActivity(this);
-            httpWrapper.execute(httppost);
+            HttpPost httppost1 = new HttpPost("http://omega.uta.edu/~sxa1001/save_location.php");
+            HttpPost httppost2 = new HttpPost("http://omega.uta.edu/~sxa1001/get_users_location.php");
+            httpWrapper1.setMapActivity(this);
+            httpWrapper2.setMapActivity(this);
+            //httpWrapper1.execute(httppost1);
+            httpWrapper2.execute(httppost2);
         }
         catch(Exception e){
             Log.e(TAG, "Error in http connection " + e.toString());
@@ -224,8 +240,9 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
                 .setExpirationDuration(Geofence.NEVER_EXPIRE).build();
 
         userMarker = googleMap.addMarker(new MarkerOptions()
-                .position(latLng)
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.currentuser_icon)));
+                        .position(latLng)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.currentuser_icon))
+        );
 
         CircleOptions circleOptions = new CircleOptions()
                 .center(latLng)   //set center
@@ -269,8 +286,15 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
                 .setExpirationDuration(Geofence.NEVER_EXPIRE).build();
 
         userMarker = googleMap.addMarker(new MarkerOptions()
-                                            .position(latLng)
-                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.currentuser_icon)));
+                        .position(latLng)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.currentuser_icon))
+        );
+
+//        Log.i(TAG,"Adding other user marker");
+//        otherUserMarker = googleMap.addMarker(new MarkerOptions()
+//                        .position(new LatLng(32.73201728,-97.11315209))
+//        );
+//        Log.i(TAG,"Other user marker lat: "+otherUserMarker.getPosition().latitude);
 
         CircleOptions circleOptions = new CircleOptions()
                 .center(latLng)   //set center
@@ -409,23 +433,9 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
 
             case R.id.profile:
                 //Toast.makeText(getBaseContext(), "You selected Profile", Toast.LENGTH_SHORT).show();
-                // declare parameters that are passed to PHP script
-                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
-
-                // define the parameter
-                postParameters.add(new BasicNameValuePair("user_id",user.getUid()));
-
-                httpWrapper1.setPostParameters(postParameters);
-
-                //http post
-                try{
-                    httppost1 = new HttpPost("http://omega.uta.edu/~sxa1001/get_user_interest.php");
-                    httpWrapper1.setMapActivity(this);
-                    httpWrapper1.execute(httppost1);
-                }
-                catch(Exception e){
-                    Log.e(TAG, "Error in http connection " + e.toString());
-                }
+                Intent intent1 = new Intent(this, UserProfile.class);
+                intent1.putExtra("user", user);
+                startActivity(intent1);
                 break;
 
             case R.id.interests:
@@ -472,24 +482,52 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
         }
     }
 
-    private User matchInterests(User otherUser) {
+    private int getCommonInterestsCount(ArrayList<Interest> otherUserInterests) {
         ArrayList<Interest> myInterests = this.user.getInterests();
-        ArrayList<Interest> otherUsersInterests = otherUser.getInterests();
 
-        ArrayList<Interest> commonInterests = new ArrayList<Interest>(myInterests);
-        commonInterests.retainAll(otherUsersInterests);
-        this.commonInterestsCount = commonInterests.size();
+        Toast.makeText(MapActivity.this,"My interests: "+myInterests.size(),Toast.LENGTH_SHORT).show();
+        Toast.makeText(MapActivity.this,"Other user interests: "+otherUserInterests.size(),Toast.LENGTH_SHORT).show();
 
-        if(this.commonInterestsCount>=Constants.MATCH_INTERESTS_THRESHOLD) {
-            Log.i(TAG,"User interest match success");
-            return otherUser;
-        } else {
-            Log.i(TAG,"User interest match failed");
-            return null;
+        ArrayList<String> myInterestText = new ArrayList<String>(myInterests.size());
+        ArrayList<String> otherUserInterestText = new ArrayList<String>(otherUserInterests.size());
+
+
+        for(Interest i: myInterests) {
+            myInterestText.add(i.getInterestText());
         }
+
+        for(Interest i: otherUserInterests) {
+            otherUserInterestText.add(i.getInterestText());
+        }
+
+        Set<String> common = new HashSet<>(myInterestText);
+        common.retainAll(new HashSet<String>(otherUserInterestText));
+        this.commonInterestsCount = common.size();
+
+        Toast.makeText(MapActivity.this,"Common interest count: "+common.size(),Toast.LENGTH_SHORT).show();
+        if(otherUserMarker!=null) {
+            otherUserMarker.remove();
+        }
+
+        Log.i(TAG,"Adding marker");
+        Toast.makeText(MapActivity.this,"Adding other user marker",Toast.LENGTH_SHORT).show();
+        otherUserMarker = googleMap.addMarker(new MarkerOptions()
+                        .position(otherUserLocation)
+                        .title(String.valueOf(this.commonInterestsCount))
+                        .icon(BitmapDescriptorFactory.fromBitmap(drawTextToBitmap(MapActivity.this,R.drawable.marker,String.valueOf(this.commonInterestsCount))))
+        );
+        Toast.makeText(MapActivity.this,"Other user marker lat: "+otherUserLocation.latitude,Toast.LENGTH_SHORT).show();
+
+        return commonInterestsCount;
     }
 
-    public void openUserProfile(String result) {
+    public int commonTwo(String[] a, String[] b) {
+        Set<String> common = new HashSet<>(Arrays.asList(a));
+        common.retainAll(new HashSet<>(Arrays.asList(b)));
+        return common.size();
+    }
+
+    public void getOtherUserInterestResult(String result) {
         try {
             JSONObject jObject  = new JSONObject(result);
             String interests = jObject.getString("interests");
@@ -505,12 +543,98 @@ public class MapActivity extends ActionBarActivity implements LocationListener,
                 selectedInterest.add(interest);
             }
 
-            user.setInterests(selectedInterest);
-            Intent intent1 = new Intent(this, UserProfile.class);
-            intent1.putExtra("user", user);
-            startActivity(intent1);
+            this.getCommonInterestsCount(selectedInterest);
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
     }
+
+    public void getUsersLocationResult(String result) {
+        if(result.contains("Success")) {
+            try {
+                JSONObject jObject  = new JSONObject(result);
+                JSONObject loc1 = jObject.getJSONObject("0");
+                JSONObject loc2 = jObject.getJSONObject("4");
+
+                double lat1 = loc1.getDouble("lat");
+                double lng1 = loc1.getDouble("lng");
+
+                String user_id = loc2.getString("user_id");
+                double lat2 = loc2.getDouble("lat");
+                double lng2 = loc2.getDouble("lng");
+
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+
+                // define the parameter
+                postParameters.add(new BasicNameValuePair("user_id",user_id));
+
+                HttpWrapper httpWrapper = new HttpWrapper();
+                httpWrapper.setPostParameters(postParameters);
+
+                //http post
+                try{
+                    HttpPost httppost = new HttpPost("http://omega.uta.edu/~sxa1001/get_other_user_interest.php");
+                    httpWrapper.setMapActivity(this);
+                    httpWrapper.execute(httppost);
+                }
+                catch(Exception e){
+                    Log.e(TAG, "Error in http connection " + e.toString());
+                }
+
+                Log.i(TAG,"Other user Lat: "+lat2);
+                Log.i(TAG,"Other user Lng: "+lng2);
+
+                LatLng latLng1 = new LatLng(lat2,lng2);
+                this.otherUserLocation = latLng1;
+
+//                if(otherUserMarker!=null) {
+//                    otherUserMarker.remove();
+//                }
+//
+//                Log.i(TAG,"Adding marker");
+//                Toast.makeText(MapActivity.this,"Adding other user marker",Toast.LENGTH_SHORT).show();
+//                otherUserMarker = googleMap.addMarker(new MarkerOptions()
+//                        .position(latLng1)
+//                        .title(String.valueOf(this.commonInterestsCount))
+//                );
+//                Toast.makeText(MapActivity.this,"Other user marker lat: "+latLng1.latitude,Toast.LENGTH_SHORT).show();
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(),"Login failed",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static Bitmap drawTextToBitmap(Context gContext,int gResId,String gText) {
+        Resources resources = gContext.getResources();
+        float scale = resources.getDisplayMetrics().density;
+        Bitmap bitmap =
+                BitmapFactory.decodeResource(resources, gResId);
+
+        android.graphics.Bitmap.Config bitmapConfig =
+                bitmap.getConfig();
+        if(bitmapConfig == null) {
+            bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+        }
+        bitmap = bitmap.copy(bitmapConfig, true);
+
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.BLACK);
+        paint.setTextSize((int) (15 * scale));
+        paint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+
+        Rect bounds = new Rect();
+        paint.getTextBounds(gText, 0, gText.length(), bounds);
+        int x = (bitmap.getWidth() - bounds.width())/2;
+        int y = (bitmap.getHeight() + bounds.height())/2;
+
+        canvas.drawText(gText, x * scale, y * scale, paint);
+
+        return bitmap;
+    }
+
 }
